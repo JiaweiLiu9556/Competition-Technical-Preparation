@@ -1,0 +1,280 @@
+1. DimState
+CREATE TABLE [dbo].[DimState](
+	[state_id] [int] NOT NULL,
+	[state_code] [nchar](10) NOT NULL,
+	[state] [nchar](50) NULL,
+ CONSTRAINT [PK_DimState] PRIMARY KEY CLUSTERED 
+(
+	[state_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+2. DimCity
+CREATE TABLE [dbo].[DimCity](
+	[City_id] [int] NOT NULL,
+	[City] [nchar](50) NOT NULL,
+	[state_id] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[City_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[DimCity]  WITH CHECK ADD  CONSTRAINT [FK_DimCity_DimState] FOREIGN KEY([state_id])
+REFERENCES [dbo].[DimState] ([state_id])
+GO
+
+ALTER TABLE [dbo].[DimCity] CHECK CONSTRAINT [FK_DimCity_DimState]
+GO
+
+
+
+3. DimSuburb
+CREATE TABLE [dbo].[DimSuburb](
+	[suburb_id] [int] NOT NULL,
+	[suburb] [nchar](50) NOT NULL,
+	[lat] [float] NOT NULL,
+	[lon] [float] NOT NULL,
+	[city_id] [int] NOT NULL,
+ CONSTRAINT [PK_DimSuburb] PRIMARY KEY CLUSTERED 
+(
+	[suburb_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[DimSuburb]  WITH CHECK ADD  CONSTRAINT [FK_DimSuburb_DimCity] FOREIGN KEY([city_id])
+REFERENCES [dbo].[DimCity] ([City_id])
+GO
+
+ALTER TABLE [dbo].[DimSuburb] CHECK CONSTRAINT [FK_DimSuburb_DimCity]
+GO
+
+
+
+4. DimPostcode
+CREATE TABLE [dbo].[DimPostcode](
+	[id] [int] NOT NULL,
+	[suburb_id] [int] NOT NULL,
+	[postcode] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[DimPostcode]  WITH CHECK ADD  CONSTRAINT [FK_DimPostcode_DimSuburb] FOREIGN KEY([suburb_id])
+REFERENCES [dbo].[DimSuburb] ([suburb_id])
+GO
+
+ALTER TABLE [dbo].[DimPostcode] CHECK CONSTRAINT [FK_DimPostcode_DimSuburb]
+GO
+
+
+
+5. Fact_PropertyValue
+CREATE TABLE [dbo].[Fact_PropertyValue](
+	[property_id] [int] NOT NULL,
+	[state_id] [int] NULL,
+	[City_id] [int] NULL,
+	[suburb_id] [int] NULL,
+	[Postcode] [int] NULL,
+	[Property_Median_Value] [money] NULL,
+	[Updated_Year] [int] NULL,
+	[Updated_Month] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[property_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Fact_PropertyValue]  WITH CHECK ADD  CONSTRAINT [FK_Fact_PropertyValue_DimSuburb] FOREIGN KEY([suburb_id])
+REFERENCES [dbo].[DimSuburb] ([suburb_id])
+GO
+
+ALTER TABLE [dbo].[Fact_PropertyValue] CHECK CONSTRAINT [FK_Fact_PropertyValue_DimSuburb]
+GO
+
+
+
+6. DimEntranceType
+CREATE TABLE [dbo].[DimEntranceType](
+	[EntranceType_id] [int] NOT NULL,
+	[EntranceType] [nchar](10) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[EntranceType_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+7. DimStationMode
+CREATE TABLE [dbo].[DimStationMode](
+	[Mode_id] [int] NOT NULL,
+	[mode] [nchar](10) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Mode_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+8. Fact_PublicSchool
+CREATE TABLE [dbo].[Fact_StationEntrances](
+	[stop_id] [int] NOT NULL,
+	[suburb_id] [int] NULL,
+	[stop_name] [nchar](255) NULL,
+	[stop_lat] [float] NULL,
+	[stop_lon] [float] NULL,
+	[Mode_id] [int] NULL,
+	[EntranceType_id] [int] NULL,
+ CONSTRAINT [PK_Fact_StationEntrances] PRIMARY KEY CLUSTERED 
+(
+	[stop_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Fact_StationEntrances]  WITH CHECK ADD  CONSTRAINT [FK_Fact_StationEntrances_DimEntranceType] FOREIGN KEY([EntranceType_id])
+REFERENCES [dbo].[DimEntranceType] ([EntranceType_id])
+GO
+
+ALTER TABLE [dbo].[Fact_StationEntrances] CHECK CONSTRAINT [FK_Fact_StationEntrances_DimEntranceType]
+GO
+
+ALTER TABLE [dbo].[Fact_StationEntrances]  WITH CHECK ADD  CONSTRAINT [FK_Fact_StationEntrances_DimStationMode] FOREIGN KEY([Mode_id])
+REFERENCES [dbo].[DimStationMode] ([Mode_id])
+GO
+
+ALTER TABLE [dbo].[Fact_StationEntrances] CHECK CONSTRAINT [FK_Fact_StationEntrances_DimStationMode]
+GO
+
+ALTER TABLE [dbo].[Fact_StationEntrances]  WITH CHECK ADD  CONSTRAINT [FK_Fact_StationEntrances_DimSuburb] FOREIGN KEY([suburb_id])
+REFERENCES [dbo].[DimSuburb] ([suburb_id])
+GO
+
+ALTER TABLE [dbo].[Fact_StationEntrances] CHECK CONSTRAINT [FK_Fact_StationEntrances_DimSuburb]
+GO
+
+
+
+9. DimLevelOfSchooling
+CREATE TABLE [dbo].[DimLevelOfSchooling](
+	[level_id] [int] NOT NULL,
+	[level_of_schooling] [nchar](255) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[level_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+10. DimSchoolGender
+CREATE TABLE [dbo].[DimSchoolGender](
+	[Gender_id] [int] NOT NULL,
+	[school_Gender] [nchar](255) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Gender_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+11. DimSchoolSubtype
+CREATE TABLE [dbo].[DimSchoolSubtype](
+	[Subtype_id] [int] NOT NULL,
+	[school_Subtype] [nvarchar](255) NOT NULL,
+ CONSTRAINT [PK_DimSchool_Subtype] PRIMARY KEY CLUSTERED 
+(
+	[Subtype_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+12. DimSpecialtyTypeOfSchool
+CREATE TABLE [dbo].[DimSpecialtyTypeOfSchool](
+	[Specialty_id] [int] NOT NULL,
+	[school_specialty_type] [nchar](255) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Specialty_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+
+13. Fact_PublicSchool
+CREATE TABLE [dbo].[Fact_PublicSchool](
+	[school_code] [int] NOT NULL,
+	[postcode] [int] NOT NULL,
+	[school_name] [nvarchar](255) NULL,
+	[school_address] [nvarchar](255) NULL,
+	[suburb_id] [int] NULL,
+	[school_lat] [float] NULL,
+	[school_lon] [float] NULL,
+	[student_number] [int] NULL,
+	[ICSEA_Value] [int] NULL,
+	[level_id] [int] NULL,
+	[Specialty_id] [int] NULL,
+	[Subtype_id] [int] NULL,
+	[Gender_id] [int] NULL,
+	[state_id] [int] NULL,
+ CONSTRAINT [PK_Fact_PublicSchool] PRIMARY KEY CLUSTERED 
+(
+	[school_code] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Fact_PublicSchool]  WITH CHECK ADD  CONSTRAINT [FK_Fact_PublicSchool_DimLevelOfSchooling] FOREIGN KEY([level_id])
+REFERENCES [dbo].[DimLevelOfSchooling] ([level_id])
+GO
+
+ALTER TABLE [dbo].[Fact_PublicSchool] CHECK CONSTRAINT [FK_Fact_PublicSchool_DimLevelOfSchooling]
+GO
+
+ALTER TABLE [dbo].[Fact_PublicSchool]  WITH CHECK ADD  CONSTRAINT [FK_Fact_PublicSchool_DimSchoolGender] FOREIGN KEY([Gender_id])
+REFERENCES [dbo].[DimSchoolGender] ([Gender_id])
+GO
+
+ALTER TABLE [dbo].[Fact_PublicSchool] CHECK CONSTRAINT [FK_Fact_PublicSchool_DimSchoolGender]
+GO
+
+ALTER TABLE [dbo].[Fact_PublicSchool]  WITH CHECK ADD  CONSTRAINT [FK_Fact_PublicSchool_DimSchoolSubtype] FOREIGN KEY([Subtype_id])
+REFERENCES [dbo].[DimSchoolSubtype] ([Subtype_id])
+GO
+
+ALTER TABLE [dbo].[Fact_PublicSchool] CHECK CONSTRAINT [FK_Fact_PublicSchool_DimSchoolSubtype]
+GO
+
+ALTER TABLE [dbo].[Fact_PublicSchool]  WITH CHECK ADD  CONSTRAINT [FK_Fact_PublicSchool_DimSpecialtyTypeOfSchool] FOREIGN KEY([Specialty_id])
+REFERENCES [dbo].[DimSpecialtyTypeOfSchool] ([Specialty_id])
+GO
+
+ALTER TABLE [dbo].[Fact_PublicSchool] CHECK CONSTRAINT [FK_Fact_PublicSchool_DimSpecialtyTypeOfSchool]
+GO
+
+ALTER TABLE [dbo].[Fact_PublicSchool]  WITH CHECK ADD  CONSTRAINT [FK_Fact_PublicSchool_DimSuburb] FOREIGN KEY([suburb_id])
+REFERENCES [dbo].[DimSuburb] ([suburb_id])
+GO
+
+ALTER TABLE [dbo].[Fact_PublicSchool] CHECK CONSTRAINT [FK_Fact_PublicSchool_DimSuburb]
+GO
+
